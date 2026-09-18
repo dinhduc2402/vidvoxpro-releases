@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VidVoxPro Flow Bridge Settings</title>
+  <link rel="icon" type="image/png" href="icons/icon-32.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0e100c;
+      --surface:      #151812;
+      --card:         #1b2018;
+      --card-hover:   #22281e;
+      --border:       #2b3323;
+      --border-focus: #cfff04;
+      --accent:       #cfff04;
+      --accent-hover: #b8e900;
+      --accent-dim:   #516600;
+      --text:         #f4f6ee;
+      --muted:        #8c9680;
+      --green:        #4ade80;
+      --red:          #f87171;
+      --font:         -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+      --font-mono:    ui-monospace, 'DM Mono', 'Cascadia Code', 'Fira Code', monospace;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(207, 255, 4, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(207, 255, 4, 0.025) 1px, transparent 1px);
+      background-size: 24px 24px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(207, 255, 4, 0.05);
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .header-text {
+      flex: 1;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title span.accent {
+      color: var(--accent);
+    }
+
+    .badge-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(207, 255, 4, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(207, 255, 4, 0.25);
+    }
+
+    .brand-desc {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+
+    .input-hint {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: -2px;
+      margin-bottom: 4px;
+    }
+
+    input {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(207, 255, 4, 0.15);
+    }
+
+    .btn-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    button {
+      background: var(--accent);
+      color: #141712;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.05s;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      box-shadow: 0 0 14px rgba(207, 255, 4, 0.3);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    #status {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    #status.ok {
+      color: var(--green);
+    }
+
+    #status.err {
+      color: var(--red);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <img src="icons/icon-32.png" alt="VidVoxPro" class="brand-icon">
+      <div class="header-text">
+        <div class="brand-title">
+          VidVox<span class="accent">Pro</span>
+          <span class="badge-tag">Settings</span>
+        </div>
+        <div class="brand-desc">WebSocket Bridge kết nối engine VidVoxPro với Google Flow</div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <label for="bridge-url">
+        WebSocket Endpoint
+        <span class="input-hint">Cổng mặc định của backend VidVoxPro (ws://127.0.0.1:9222)</span>
+        <input id="bridge-url" value="ws://127.0.0.1:9222" spellcheck="false" autocomplete="off">
+      </label>
+
+      <div class="btn-row">
+        <button id="save" type="button">Save and reconnect</button>
+        <span id="status" role="status"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

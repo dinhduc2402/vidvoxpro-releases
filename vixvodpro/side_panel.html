@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>VidVoxPro Bridge</title>
+  <link rel="icon" type="image/png" href="icons/icon-32.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:             #0e100c;
+      --surface:        #151812;
+      --card:           #1b2018;
+      --card-hover:     #22281e;
+      --border:         #2b3323;
+      --border-subtle:  #1e2419;
+      --accent:         #cfff04;
+      --accent-hover:   #b8e900;
+      --accent-dim:     #516600;
+      --accent-purple:  #c084fc;
+      --green:          #4ade80;
+      --red:            #f87171;
+      --yellow:         #fbbf24;
+      --text:           #f4f6ee;
+      --muted:          #8c9680;
+      --font:           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+      --font-mono:      ui-monospace, 'DM Mono', 'Cascadia Code', 'Fira Code', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      width: 100%;
+      min-width: 280px;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(207, 255, 4, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(207, 255, 4, 0.02) 1px, transparent 1px);
+      background-size: 24px 24px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .header-title .brand-accent {
+      color: var(--accent);
+    }
+
+    .badge-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(207, 255, 4, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(207, 255, 4, 0.25);
+    }
+
+    /* Connection dot */
+    #conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 0 0 var(--red);
+      transition: background 0.3s, box-shadow 0.3s;
+      flex-shrink: 0;
+    }
+
+    #conn-dot.on {
+      background: var(--green);
+      box-shadow: 0 0 6px 1px rgba(74, 222, 128, 0.6);
+      animation: pulse-dot 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 4px 1px rgba(74, 222, 128, 0.4); }
+      50%       { box-shadow: 0 0 10px 3px rgba(74, 222, 128, 0.2); }
+    }
+
+    /* ON/OFF toggle */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .toggle-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .toggle {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: transform 0.25s, background 0.25s, box-shadow 0.25s;
+    }
+
+    .toggle input:checked ~ .toggle-track {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+    }
+    .toggle input:checked ~ .toggle-thumb {
+      transform: translateX(14px);
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(207, 255, 4, 0.5);
+    }
+
+    /* ── Metrics grid ───────────────────────────────── */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric-card {
+      background: var(--card);
+      padding: 10px 8px 8px;
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-value.green { color: var(--green); }
+    .metric-value.red   { color: var(--red); }
+
+    .metric-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    /* ── State bar ──────────────────────────────────── */
+    .state-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    #state-badge {
+      padding: 1px 7px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    #state-badge.idle    { background: rgba(74, 222, 128, 0.15); border-color: rgba(74, 222, 128, 0.3); color: var(--green); }
+    #state-badge.running { background: rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.3); color: var(--yellow); }
+    #state-badge.off     { background: var(--card); border-color: var(--border); color: var(--muted); }
+
+    #token-status {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    #token-status.ok   { color: var(--green); }
+    #token-status.bad  { color: var(--red); }
+    #token-status.warn { color: var(--yellow); }
+
+    /* ── Log section ────────────────────────────────── */
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px 6px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #log-count {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .log-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .log-table-wrap {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .log-table-wrap::-webkit-scrollbar { width: 4px; }
+    .log-table-wrap::-webkit-scrollbar-track { background: transparent; }
+    .log-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      padding: 6px 10px;
+      text-align: left;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 1;
+    }
+
+    thead th:first-child { width: 60px; }
+    thead th:last-child { width: 36%; }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(43, 51, 35, 0.6);
+      transition: background 0.12s;
+    }
+
+    tbody tr:hover { background: rgba(207, 255, 4, 0.05); }
+
+    tbody td {
+      padding: 5px 10px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .td-id {
+      font-size: 9px;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: transparent;
+      transition: text-decoration-color 0.15s;
+    }
+
+    .td-id:hover {
+      text-decoration-color: var(--accent);
+    }
+
+    .td-type {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--accent-purple);
+    }
+
+    .td-time {
+      font-size: 10px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Status badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    .badge-ok   { background: rgba(74, 222, 128, 0.15);  color: var(--green); }
+    .badge-fail { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+    .badge-proc { background: rgba(251, 191, 36, 0.15);  color: var(--yellow); }
+
+    .td-error {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 10px;
+      color: var(--red);
+      cursor: default;
+    }
+
+    .td-error.empty { color: var(--muted); }
+
+    .log-empty {
+      padding: 24px 14px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Action buttons ─────────────────────────────── */
+    .actions {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .btn {
+      flex: 1;
+      padding: 8px 10px;
+      font-family: var(--font);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--card-hover);
+      border-color: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .btn:active { opacity: 0.8; }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #141712;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      color: #141712;
+      box-shadow: 0 0 12px rgba(207, 255, 4, 0.35);
+    }
+
+    /* ── Signature ──────────────────────────────────── */
+    .signature {
+      padding: 7px 14px;
+      text-align: center;
+      font-family: var(--font);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .signature .brand-name {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .signature .brand-accent {
+      color: var(--accent);
+    }
+
+    /* ── Detail modal ──────────────────────────────── */
+    .detail-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+
+    .detail-overlay.open { display: flex; align-items: center; justify-content: center; }
+
+    .detail-panel {
+      width: 92%;
+      max-height: 80vh;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .detail-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 3px;
+      transition: color 0.15s;
+    }
+
+    .detail-close:hover { color: var(--accent); }
+
+    .detail-body {
+      padding: 12px 14px;
+      overflow-y: auto;
+      font-size: 10px;
+      line-height: 1.6;
+      max-height: 65vh;
+    }
+
+    .detail-row {
+      display: flex;
+      gap: 8px;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(43, 51, 35, 0.5);
+    }
+
+    .detail-label {
+      width: 90px;
+      flex-shrink: 0;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 9px;
+      letter-spacing: 0.06em;
+    }
+
+    .detail-value {
+      flex: 1;
+      word-break: break-all;
+      color: var(--text);
+    }
+
+    .detail-value.error { color: var(--red); }
+    .detail-value.ok { color: var(--green); }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-brand">
+      <div id="conn-dot"></div>
+      <img src="icons/icon-32.png" alt="VidVoxPro" class="brand-icon">
+      <div class="header-title">VidVox<span class="brand-accent">Pro</span> <span class="badge-tag">Bridge</span></div>
+    </div>
+    <div class="toggle-wrap">
+      <span class="toggle-label" id="toggle-label">OFF</span>
+      <label class="toggle">
+        <input type="checkbox" id="main-toggle">
+        <span class="toggle-track"></span>
+        <span class="toggle-thumb"></span>
+      </label>
+    </div>
+  </header>
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-value" id="m-total">0</div>
+      <div class="metric-label">Total</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value green" id="m-success">0</div>
+      <div class="metric-label">Success</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value red" id="m-failed">0</div>
+      <div class="metric-label">Failed</div>
+    </div>
+  </div>
+
+  <!-- State bar -->
+  <div class="state-bar">
+    STATE
+    <span id="state-badge" class="off">off</span>
+    <span id="token-status" class="bad">no token</span>
+  </div>
+
+  <!-- Request log -->
+  <div class="log-section">
+    <div class="log-header">
+      Request Log
+      <span id="log-count">0</span>
+    </div>
+
+    <div class="log-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody id="log-body">
+          <tr>
+            <td colspan="5" class="log-empty">No requests yet</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn btn-primary" id="btn-flow">Open Flow Tab</button>
+    <button class="btn" id="btn-token">Refresh Token</button>
+    <button class="btn" id="btn-capture-create" hidden>Capture Create RPC</button>
+  </div>
+
+  <!-- Signature -->
+  <div class="signature">
+    <span class="brand-name">VidVox<span class="brand-accent">Pro</span></span> &middot; Flow Bridge
+  </div>
+
+  <!-- Detail overlay -->
+  <div class="detail-overlay" id="detail-overlay">
+    <div class="detail-panel">
+      <div class="detail-header">
+        <span id="detail-title">Request Detail</span>
+        <button class="detail-close" id="detail-close">&times;</button>
+      </div>
+      <div class="detail-body" id="detail-body"></div>
+    </div>
+  </div>
+
+  <script src="side_panel.js"></script>
+</body>
+</html>
